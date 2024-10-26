@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Energy Usage Tracker</title>
+    <style>
+        /* Add your CSS styles here */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+
+        header {
+            background-color: #4CAF50; /* Dark green header */
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        footer {
+            background-color: #4CAF50; /* Dark green footer */
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        footer p {
+            margin: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff; /* White container background */
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+            overflow: hidden; /* Hide overflow */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        form {
+            flex: 1;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #f5f5f5;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        input[type="date"],
+        input[type="number"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 15px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .data-list {
+            flex: 1;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background-color: #f5f5f5;
+            list-style: none;
+            margin-left: 20px;
+        }
+
+        .data-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .data-item span {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .data-item button {
+            padding: 10px 15px;
+            background-color: #ff5722;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .data-item button:hover {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Home Energy Usage Tracker</h1>
+    </header>
+
+    <div class="container">
+        <!-- Add your main content here -->
+        <form id="addForm">
+            <h2>Add Energy Usage Data</h2>
+            <label for="date">Date:</label>
+            <input type="date" id="date" name="date" required><br>
+            <label for="usage">Usage (kWh):</label>
+            <input type="number" id="usage" name="usage" required><br>
+            <button type="submit">Add Data</button>
+        </form>
+
+        <ul class="data-list" id="energyList"></ul>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Home Energy Usage Tracker</p>
+    </footer>
+
+    <script>
+        // Add your JavaScript code here
+        const energyList = document.getElementById('energyList');
+
+        // Function to fetch and display energy usage data
+        async function fetchEnergyUsage() {
+            energyList.innerHTML = '';
+            const response = await fetch('/energy_usage');
+            const data = await response.json();
+            data.energy_data.forEach(item => {
+                const li = document.createElement('li');
+                li.classList.add('data-item');
+                li.innerHTML = `
+                    <span>${item.date}</span>
+                    <span>${item.usage} kWh</span>
+                    <button onclick="deleteEnergyUsage('${item._id}')">Delete</button>
+                `;
+                energyList.appendChild(li);
+            });
+        }
+
+        // Function to add new energy usage data
+        async function addEnergyUsage(event) {
+            event.preventDefault();
+            const date = document.getElementById('date').value;
+            const usage = document.getElementById('usage').value;
+            await fetch('/energy_usage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ date, usage })
+            });
+            fetchEnergyUsage();
+            document.getElementById('addForm').reset();
+        }
+
+        // Function to delete energy usage data
+        async function deleteEnergyUsage(id) {
+            await fetch(`/energy_usage/${id}`, {
+                method: 'DELETE'
+            });
+            fetchEnergyUsage();
+        }
+
+        document.getElementById('addForm').addEventListener('submit', addEnergyUsage);
+        fetchEnergyUsage();
+    </script>
+</body>
+</html>
